@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+function _upfind() {
+    local find_name=$1
+    local default=$2
+    dir=`pwd`
+    while [[ $dir =~ ^$HOME ]]; do
+        p=$(find "$dir" -maxdepth 1 -name "$find_name")
+        if [[ -n $p ]]; then
+            echo $p
+            return
+        fi
+        dir=$(dirname "$dir")
+    done
+    echo $default
+}
+
+[[ $GW ]] || GW="$(_upfind gradlew gradle)"
+exec "$GW" "$@"

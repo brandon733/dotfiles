@@ -1,0 +1,132 @@
+#!/usr/bin/env bash
+
+# parameter expansion:
+# http://mywiki.wooledge.org/FullBashGuide#Parameters
+
+dir0=${0%/*}
+
+while [ ".$1" != "." ]; do
+    case "$1" in
+        --vim) opt_vim=1;;
+        --show) opt_show=1;;
+        -*) echo "usage: $0 [--vim] [--show]"; exit 0;;
+        *) break;;
+    esac
+    shift
+done
+
+## diffs <reference file in git> <path of real file from $HOME>
+diffit() {
+    src=${0%/*}/$1
+    dst=$HOME/$2
+    mkdir -p $(dirname $dst)
+    [ -f "$dst" ] || cp $src $dst
+    if [ -n "$opt_vim" ]; then
+        diff -q $dst $src || vim -d $dst $src
+    elif [ -n "$opt_show" ]; then
+        diff -q $dst $src >/dev/null || {
+            echo "*** diff $dst $src"
+            diff $dst $src
+        }
+    else
+        diff -q $dst $src >/dev/null || echo "Files differ: $dst $src"
+    fi
+}
+## copy src file if doesn't exist in dst directory
+copy_if_not_exist() {
+    src=$1
+    dst=$2
+    for f in $(ls $src); do
+        [ -d "$f" ] && continue
+        if [ ! -f "$dst/$f" ]; then
+            cp -v "$src/$f" "$dst/"
+        fi
+    done
+}
+
+
+## external
+mkdir -p bash/completions $HOME/.bash/completions
+
+## bash
+diffit bash_profile .bash_profile
+diffit bashrc .bashrc
+diffit inputrc .inputrc
+for path in $(find bash -type f); do
+    path=${path#*/} # take out first dir
+    diffit bash/$path .bash/$path
+done
+for path in $(find ~/.bash -type f); do
+    path=${path#$HOME/}
+    [ -f "bash/${path#*/}" ] && continue
+    [[ $path == *"/history/"* ]] && continue
+    [[ $path == *".local" ]] && continue
+    if ! grep -q "^bash/${f##*/}$" .upignore; then
+        echo "File exists in ~/.bash but not in ./bash/${path#*/}"
+    fi
+done
+
+## config
+diffit ignore .ignore
+diffit gitconfig .gitconfig
+diffit gitignore .gitignore
+diffit tmux.conf .tmux.conf
+diffit vimrc .vimrc
+diffit psqlrc .psqlrc
+diffit bcrc .bcrc
+diffit tigrc .tigrc
+diffit gemrc .gemrc
+diffit dict.utf-8.add .dict.utf-8.add
+## config dir0
+for path in $(find config -type f); do
+    diffit $path .$path
+done
+## ctags.d
+mkdir -p $HOME/.ctags.d
+for f in $(ls $dir0/ctags.d); do
+    diffit ctags.d/$f .ctags.d/$f
+done
+## bin
+mkdir -p $HOME/bin
+for f in $dir0/bin/*; do
+    f=${f##*/}
+    diffit bin/$f bin/$f
+done
+for f in $HOME/bin/*; do
+    if [ -f "$f" ] && [ ! -f "$dir0/bin/${f##*/}" ] && ! grep -q "^bin/${f##*/}$" .upignore; then
+        echo "File exists in ~/bin but not in ./bin/${f##*/}"
+    fi
+done
+if [ -d "$dir0/bin/$(uname -s)" ]; then
+    for f in $dir0/bin/$(uname -s)/*; do
+        f=${f##*/}
+        diffit bin/$(uname -s)/$f bin/$f
+    done
+fi
+[ -d ~/bin/.fzf ] || {
+    echo "Installing fzf .."
+    git clone https://github.com/junegunn/fzf.git ~/bin/.fzf
+    ~/bin/.fzf/install
+}
+pushd ~/bin/.fzf >/dev/null
+git fetch >/dev/null 2>&1
+$(git diff origin --quiet) || {
+    echo "Updating ~/bin/.fzf .."
+    git pull
+    ./install --bin
+    cp -v plugin/fzf.vim ~/.vim/plugin/fzf.vim
+}
+popd >/dev/null
+
+# kubectx, kubens
+#[ -d "kubectx" ] && cd kubectx && git pull && cd ..
+#[ ! -d "kubectx" ] && git clone https://github.com/ahmetb/kubectx.git
+# just copy these directly
+#[ -L $HOME/bin/kubectx ] || ln -s $PWD/kubectx/kubectx $HOME/bin/kubectx
+#[ -L $HOME/bin/kubens ] || ln -s $PWD/kubectx/kubens $HOME/bin/kubens
+#[ -L $HOME/.bash/completions/kubectx.bash ] || ln -s $PWD/kubectx/completion/kubectx.bash $HOME/.bash/completions/kubectx.bash
+#[ -L $HOME/.bash/completions/kubens.bash ] || ln -s $PWD/kubectx/completion/kubens.bash $HOME/.bash/completions/kubens.bash
+# completions from commands
+#hash kubectl 2>/dev/null && kubectl completion bash >$HOME/.bash/completions/kubectl.bash
+#hash helm 2>/dev/null && helm completion bash >$HOME/.bash/completions/helm.bash
+#hash poetry 2>/dev/null && poetry completions bash >$HOME/.bash/completions/poetry.bash

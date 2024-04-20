@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+P=`cd "$(dirname $0)"; pwd -P`
+# local copy, below uses cdnjs: https://cdnjs.com/libraries/github-markdown-css
+css=$P/github-markdown.css
+title=$1
+
+out=/dev/stdout
+while [ ".$1" != "." ]; do
+    case "$1" in
+        -o ) shift; out=$1; shift;;
+        * ) break;;
+    esac
+done
+
+cat <<EOF >"$out"
+<html><head><title>$title</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+<style>
+  .markdown-body {
+    box-sizing: border-box;
+    min-width: 200px;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 45px;
+  }
+
+  @media (max-width: 767px) {
+    .markdown-body {
+      padding: 15px;
+    }
+  }
+</style></head>
+<body class="markdown-body">
+$(LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH cmark-gfm -e autolink -e table "$@")
+</body></html>
+EOF

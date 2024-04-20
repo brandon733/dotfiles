@@ -1,0 +1,6 @@
+*.crt
+*.ovpn
+.upignore
+/kubectx/
+bash/completions/
+pgpass
