@@ -1,0 +1,48 @@
+# Here only for reference, flake8 does not honor this file:
+# https://flake8.pycqa.org/en/latest/release-notes/4.0.0.html#backwards-incompatible-changes
+# Due to constant confusion by users, user-level Flake8 configuration files are no longer
+# supported. Files will not be searched for in the user’s home directory (e.g., ~/.flake8)
+# nor in the XDG config directory (e.g., ~/.config/flake8).
+
+[flake8]
+# Line length is intentionally set to 80 here because black uses Bugbear
+# See https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html#line-length
+count = True
+inline-quotes = double
+max-line-length = 80
+max-complexity = 18
+max-doc-length = 167
+show-source = True
+statistics = True
+ignore =
+    ; whitespace before ':' - according to black: this is not PEP 8 compliant
+    E203,
+    ; Too many leading '#' for block comment
+    E266,
+    ; favor B950
+    E501,
+    ; line break before binary operator. This is incompartible with Black, see:
+    ;   https://black.readthedocs.io/en/stable/the_black_code_style.html#line-breaks-binary-operators)
+    W503,
+extend-ignore =
+    ; Missing docstring in public *
+    D100,D101,D102,D103,D104,D105,D106,D107,
+    ; One-line docstring should fit on one line with quotes
+    D200,
+    ; lowercase 'pyspark.sql.functions' imported as non lowercase 'F'
+    N812,
+exclude =
+    *.egg/*,
+    *.egg-info/*build,
+    dist,
+    __pycache__,
+    .mypy_cache,
+    .pytest_cache,
+    .tox,
+    .venv,
+    **/docs/*,
+per-file-ignores =
+    scripts/*:T20,
+    cli.py:T20,
+
+; vim: filetype=cfg

@@ -1,0 +1,15 @@
+# https://github.com/grassdog/dotfiles/blob/master/files/.ctags
+
+--recurse=yes
+--tag-relative=yes
+--fields=+l
+
+--exclude=.git
+--exclude=.mypy_cache
+--exclude=__pycache__
+--exclude=bower_components
+--exclude=build
+--exclude=log
+--exclude=node_modules
+--exclude=target
+--exclude=tmp
