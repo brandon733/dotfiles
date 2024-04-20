@@ -1,0 +1,92 @@
+## called from ~/.bashrc
+
+export TERM_ITALICS=true
+
+if [ "$(uname -s)" = "Darwin" ]; then
+    export CLICOLOR=1
+    export GREP_OPTIONS='--color=auto'
+    export LSCOLORS=exfxcxdxbxegedabagacad
+
+    # http://drmuey.com/?do=page&id=15
+    export COPYFILE_DISABLE=true
+fi
+
+## aliases
+. "$HOME/.bash/aliases"
+
+## completions
+
+if [ "$(uname -s)" = "Darwin" ]; then
+    [ -r "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh" ] && \
+        . "$HOMEBREW_PREFIX/etc/profile.d/bash_completion.sh"
+fi
+
+for f in $HOME/.bash/bash_completion.d/*; do
+    . $f
+done
+
+# git bash completion, before general bash_completion b/c tig completion script
+# xcode-select -p -> /Library/Developer/CommandLineTools
+if [ "$(uname -s)" = "Darwin" ]; then
+    XCODE_PRE=$(xcode-select -p)
+    for f in "$XCODE_PRE/usr/share/git-core/git-completion.bash" \
+        "$XCODE_PRE/usr/share/git-core/git-prompt.sh"; do
+        [ -r "$f" ] && . "$f"
+    done
+else
+    for f in "/usr/share/git-core/contrib/completion/git-prompt.sh" \
+        "/etc/bash_completion.d/git-prompt" \
+        "/usr/share/bash-completion/completions/git"; do
+        [ -r "$f" ] && . $f
+    done
+fi
+
+
+# fzf
+[ -f ~/.fzf.bash ] && . ~/.fzf.bash
+## https://mike.place/2017/fzf-fd/
+## ubuntu installs as "fdfind"
+type "fdfind" &>/dev/null && fd=fdfind || fd=fd
+export FZF_DEFAULT_COMMAND="$fd -t f"
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+export FZF_ALT_C_COMMAND="$fd -t d"
+
+# set the bash prompt (uses fzf, git from above)
+# history vars are set here
+. ~/.bash/prompt.sh
+
+# direnv
+eval "$(direnv hook bash)"
+
+# zoxide
+[ -x "$(command -v zoxide)" ] && eval "$(zoxide init --cmd j bash)"
+
+# tmux
+[ "$SESSION_TYPE" = "remote/ssh" ] && export TMUX_SYM='🔒' || export TMUX_SYM='⚡'
+
+# bc
+export BC_ENV_ARGS=$HOME/.bcrc
+
+# save last bash history
+function log_bash_history {
+    [[
+    $(history 1) =~ ^\ *[0-9]+\ +([^\ ]+\ [^\ ]+)\ +(.*)$
+    ]]
+    local _dt="${BASH_REMATCH[1]}"
+    local _cmd="${BASH_REMATCH[2]}"
+    if [ "$_cmd" != "$PERSISTENT_HISTORY_LAST" ]
+    then
+        echo "$_dt $_cmd  # [$(tty)] $(pwd)" >>"$HOME/.history/bash-$(date "+%Y-%m-%d").log"
+        export PERSISTENT_HISTORY_LAST="$_cmd"
+    fi
+}
+
+# local bashrc
+[ -f "$HOME/.bash/bashrc.local" ] && . "$HOME/.bash/bashrc.local"
+
+# after all aliases
+. ~/.bash/complete_alias
+complete -F _complete_alias "${!BASH_ALIASES[@]}"
+# other complete functions
+complete -C /opt/homebrew/bin/terraform terraform
+complete -C /opt/homebrew/bin/terraform tf

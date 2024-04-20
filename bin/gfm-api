@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+title=$(echo $1|jq -aRs .)
+content=$(cat $1|jq -aRs .)
+echo "{\"text\": $content, \"mode\": \"gfm\"}" >/tmp/_gfm.json
+curl -s -X POST -H "Content-Type: application/json" -H "Accept: application/vnd.github.v3+json" -d @/tmp/_gfm.json https://api.github.com/markdown -o /tmp/_gfm.html
+
+cat <<EOF >/dev/stdout
+<html><head><title>$title</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+<style>
+  .markdown-body {
+    box-sizing: border-box;
+    min-width: 200px;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 45px;
+  }
+
+  @media (max-width: 767px) {
+    .markdown-body {
+      padding: 15px;
+    }
+  }
+</style></head>
+<body class="markdown-body">
+$(cat /tmp/_gfm.html)
+</body></html>
+EOF
