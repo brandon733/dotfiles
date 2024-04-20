@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "@marp-team/marp-cli": "^3.4.0",
+    "bcat": "^2.0.0",
+    "github-markdown-css": "^5.5.1",
+    "hcat": "^2.1.4",
+    "npm-check-updates": "^16.14.18",
+    "prettier": "^3.2.5",
+    "underscore-cli": "^0.2.19",
+    "yarn": "^1.22.22"
+  }
+}
