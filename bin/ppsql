@@ -1,0 +1,103 @@
+#!/usr/bin/env bash
+
+## Parse ~/.pgpass file and present them as options
+
+usage() {
+    [ "$1" ] && echo "Error: $1"
+    echo "
+Usage: $0 [-N] [-db DB] [-user USER]
+Options:
+  -N
+      Select the Nth choice
+  -db DB
+      Override the database name with this DB
+  -user USER
+      Override the user name with this USER
+  -p
+      Print the psql command line and exit
+"
+    exit 1
+}
+
+shopt -s extglob
+while [ "$1" ]; do
+    case "$1" in
+        -p ) opt_print=1;;
+        *(-)d | *(-)db ) shift; opt_db=$1;;
+        *(-)u | *(-)user ) shift; opt_user=$1;;
+        *(-)* ) opt_num=$(echo "$1"|sed 's/^-*//')
+            [[ $opt_num =~ ^[0-9]+$ ]] || usage "Unrecognized option \`$1\`"
+            ;;
+        * ) echo usage "Unrecognized argument \`$1\`"
+    esac
+    shift
+done
+
+parse_pgpass_line() {
+    # hostname:port:database:username:password
+    line=$1
+    host=$(echo "$line" | cut -d ":" -f 1)
+    port=$(echo "$line" | cut -d ":" -f 2)
+    db=$(echo "$line" | cut -d ":" -f 3)
+    user=$(echo "$line" | cut -d ":" -f 4)
+    # pass=$(echo "$line" | cut -d ":" -f 5)
+    unset is_ro
+    [[ $host =~ .*"-ro-".* || $user == "read_only" ]] && is_ro="[RO]"
+}
+
+parse_pgpass_file() {
+    opts=()
+    pgpass=()
+    while IFS= read -r line; do
+        [[ $line == \#* ]] && continue
+        [ "$line" ] || continue
+        pgpass+=("$line")
+        parse_pgpass_line "$line"
+        opt=$(printf "%20s  %-22s %s" "$user" "$db$is_ro" "$host")
+        opts+=("$opt")
+    done < "$HOME/.pgpass"
+}
+
+parse_pgpass_file
+
+# check $opt_num, if specified, after parsing pgpass file
+if [ "$opt_num" ]; then
+    opt_num=$((opt_num - 1))
+    sel_pgpass="${pgpass[$opt_num]}"
+    [ -z "$sel_pgpass" ] && usage "Option \`-$((opt_num + 1))\` is not a valid value"
+fi
+
+# user pre-selected
+if [ -z "$opt_num" ]; then
+    printf "Select? %16s  %-22s %s\n" "USER" "DATABASE" "HOST"
+    COLUMNS=1
+    select opt in "${opts[@]}"; do
+        opt_num=$((REPLY - 1))
+        break
+    done
+fi
+parse_pgpass_line "${pgpass[$opt_num]}"
+
+# the selected DB is either the option (-db) or user selection/input
+[ "$opt_db" ] && sel_db=$opt_db
+[ -z "$sel_db" ] && sel_db=$db
+if [[ $sel_db == \* ]]; then
+    echo -n "What is the DB name? "
+    read -r sel_db
+    [ "$sel_db" ] || { echo "ERROR: DB name cannot be blank"; exit 1; }
+fi
+
+# the selected username is either the option (-user) or user selection/input
+[ "$opt_user" ] && sel_user=$opt_user
+[ -z "$sel_user" ] && sel_user=$user
+if [[ $sel_user == \* ]]; then
+    echo -n "What is the user name? "
+    read -r sel_user
+    [ "$sel_user" ] || { echo "ERROR: user name cannot be blank"; exit 1; }
+fi
+
+echo ">> psql -h $host -p $port -U $sel_user -d $sel_db"
+echo ">> postgresql://$sel_user@$host:$port/$sel_db"
+if [ -z "$opt_print" ]; then
+    psql -h "$host" -p "$port" -U "$sel_user" -d "$sel_db"
+fi

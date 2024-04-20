@@ -1,0 +1,65 @@
+# node
+export NVM_DIR="$HOME/.nvm"
+[ -s "$HOMEBREW_PREFIX/opt/nvm/nvm.sh" ] && \. "$HOMEBREW_PREFIX/opt/nvm/nvm.sh"
+[ -s "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm" ] && \. "$HOMEBREW_PREFIX/opt/nvm/etc/bash_completion.d/nvm"
+# for user global node packages, use installed in ~/bin/package.json
+
+PATH="$HOME/bin/node_modules/.bin${PATH:+:$PATH}"
+
+# python (mac)
+PYTHON_HOME=$HOME/Library/Python/3.11
+[ -d "$PYTHON_HOME" ] && PATH="$PYTHON_HOME/bin${PATH:+:$PATH}"
+graphviz_path=$HOMEBREW_PREFIX/Cellar/graphviz/12.2.1
+if [ -d "$graphviz_path" ]; then
+    export CFLAGS="${CFLAGS:+ $CFLAGS }-I$graphviz_path/include"
+    export LDFLAGS="${LDFLAGS:+ $LDFLAGS }-L$graphviz_path/lib"
+fi
+
+# local cpan
+PERL_HOME=$HOME/perl5
+if [ -d "$PERL_HOME" ]; then
+	PATH="$PERL_HOME/bin${PATH:+:${PATH}}"
+	PERL5LIB="$PERL_HOME/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
+	PERL_LOCAL_LIB_ROOT="$PERL_HOME${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+	PERL_MB_OPT="--install_base \"$PERL_HOME\""; export PERL_MB_OPT;
+	PERL_MM_OPT="INSTALL_BASE=$PERL_HOME"; export PERL_MM_OPT;
+fi
+
+# vim (mac)
+[ -d "/Applications/MacVim.app/Contents/bin" ] && PATH="/Applications/MacVim.app/Contents/bin${PATH:+:$PATH}"
+
+# kotlin
+[ -d "$HOME/bin/kotlinc/bin" ] && PATH="${PATH:+$PATH:}$HOME/bin/kotlinc/bin"
+#[ -d "$HOME/bin/kotlin/bin" ] && PATH="${PATH:+$PATH:}$HOME/bin/kotlin/bin"
+
+# rust
+[ -d "$HOME/.cargo/bin" ] && PATH="${PATH:+$PATH:}$HOME/.cargo/bin"
+
+# java
+[ -r "$HOME/bin/java/.env" ] && . "$HOME/bin/java/.env"
+
+# scala
+#[ -d "$HOME/Library/Application Support/Coursier/bin" ] && PATH="${PATH:+$PATH:}$HOME/Library/Application Support/Coursier/bin"
+PATH="/opt/homebrew/opt/scala@2.12/bin:$PATH"
+
+# cassandra
+[ -d "$HOME/bin/apache-cassandra-4.1.3/bin" ] && PATH="${PATH:+$PATH:}$HOME/bin/apache-cassandra-4.1.3/bin"
+
+# homebrew postgres
+pg_path=/Applications/Postgres.app/Contents/Versions/17
+if [ -d "$pg_path" ]; then
+	PATH="$pg_path/bin${PATH:+:$PATH}"
+	export LDFLAGS="${LDFLAGS:+ $LDFLAGS }-L$pg_path/lib"
+	export CPPFLAGS="${CPPFLAGS:+ $CPPFLAGS }-I$pg_path/include"
+fi
+unset pg_path
+
+# ruby
+GEM_HOME=$HOME/.gem/ruby/2.6.0
+[ -d "$GEM_HOME" ] && PATH="${PATH:+$PATH:}$GEM_HOME/bin"
+
+# go
+[ -d "$HOMEBREW_PREFIX/go" ] && PATH="${PATH:+$PATH:}$HOMEBREW_PREFIX/go/bin"
+
+# local profile
+[ -r "$HOME/.bash/profile.local" ] && . "$HOME/.bash/profile.local"

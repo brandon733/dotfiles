@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# recursive git pull
+set -e
+shopt -s dotglob
+pr() {
+    echo "$(tput bold)>>> ----- $@ $(tput sgr0)"
+}
+update() {
+    for d in "$@"; do
+        if [[ ! -d "$d" ]] || [[ -L "$d" ]]; then
+            # only non-linked directories
+            continue
+        fi
+        cd -- "$d"
+        if [ -d ".git" ]; then
+            pr "$PWD"
+            {
+                git fetch >/dev/null
+                if [ "$(git rev-parse HEAD)" != "$(git rev-parse @{u})" ]; then
+                    git pull --recurse-submodules || true
+                fi
+            } || true
+        else
+            update ./*
+        fi
+        cd ..
+    done
+}
+[ $# -gt 0 ] || { echo "usage: $0 DIR [DIR ..]"; exit 1; }
+update "$@"

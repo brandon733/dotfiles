@@ -1,0 +1,61 @@
+alias h='history'
+alias 1='fg %1'
+alias 2='fg %2'
+alias 3='fg %3'
+alias k1='kill -HUP %1 && fg'
+alias k2='kill -HUP %2 && fg'
+alias k3='kill -HUP %3 && fg'
+
+alias trim='cut -c-$(tput cols)'
+
+# blue+bold in solarized palette is gray
+#alias rg='rg --smart-case --colors path:fg:blue --colors path:style:bold --colors line:none'
+#alias ag='ag --color-path "1;36" --color-match "1;31" --color-line-number "0"'
+alias rg='rg --smart-case'
+
+alias ale='alembic'
+alias d='docker'
+alias dc='docker-compose'
+alias g='git'
+alias gc='gcloud'
+alias gsu='gsutil'
+alias po='poetry'
+alias tf='tofu'
+alias utc='date -u +%Y-%m-%dT%H:%M:%SZ'
+
+# see aliases in ./aliases.kubectl
+alias kc='kubectl'
+alias kx='kubectx'
+
+alias ass='aws'
+
+# https://www.commandlinefu.com/commands/view/12043/remove-color-special-escape-ansi-codes-from-text-with-sed
+alias stripansi='sed "s,\x1B\[[0-9;]*[a-zA-Z],,g"'
+alias top10='/bin/ps -eo pcpu,pid,user,args | sort -k 1 -r | head -10'
+alias brewup='brew update && brew upgrade && brew cleanup -s'
+alias uenc='python -c "import sys,urllib;print urllib.quote(sys.stdin.read().strip())"'
+alias udec='python -c "import sys,urllib;print urllib.unquote(sys.stdin.read().strip())"'
+
+alias retag-py='ctags -R --fields=+l --languages=python --python-kinds=-iv $(python -c "import os, sys; print('"'"' '"'"'.join('"'"'{}'"'"'.format(d) for d in sys.path if os.path.isdir(d)))")'
+
+alias pytestinf='pytest --log-cli-level=INFO -rP'
+alias pytestdbg='pytest --log-cli-level=DEBUG -rP'
+
+alias avro='avro-tools'
+
+#alias plantuml="java -jar $HOME/bin/plantuml.jar -verbose"
+
+alias protoc='/opt/homebrew/Cellar/protobuf@3/3.20.3/bin/protoc'
+alias pq='~/.cargo/bin/pq'
+
+# -- os specific
+if [ "$(uname -s)" = "Darwin" ]; then
+    alias wcat='open -a /Applications/Google\ Chrome.app -f'
+fi
+
+function pr_csv {
+    # perl -pe 's/((?<=,)|(?<=^)),/ ,/g;' "$@" | column -t -s, | less  -F -S -X -K
+    perl -pe 's/((?<=,)|(?<=^)),/ ,/g;' "$@" | column -t -s,
+}
+
+[ -f "$HOME/.bash/aliases.local" ] && source "$HOME/.bash/aliases.local"

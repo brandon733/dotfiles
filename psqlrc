@@ -1,0 +1,27 @@
+-- https://www.craigkerstiens.com/2015/12/29/my-top-10-postgres-features-and-tips-for-2016/
+-- Set your default EDITOR then use \e
+\set QUIET 1
+\pset null '∅'
+\pset pager on
+
+\set PROMPT1 '[%m] %/%# '
+\set PROMPT2 '.. '
+
+\timing
+
+\x auto
+\set VERBOSITY verbose
+\set HISTCONTROL ignoredups
+\set HISTSIZE -1
+\set COMP_KEYWORD_CASE upper
+
+-- pspg
+--\setenv PAGER pspg
+
+--\pset border 2
+--\pset linestyle unicode
+
+\unset QUIET
+
+-- Set history to unlimited
+-- \d all the things

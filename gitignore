@@ -1,0 +1,10 @@
+*~[0-9]*
+.DS_Store
+.dict.utf-8.add
+.dict.utf-8.add.spl
+.env
+.envrc
+Thumbs.db
+out
+*.out
+tags
